@@ -28,7 +28,7 @@ This project implements an AI-powered receptionist for Dr. Adrin using a web-bas
 
    ```bash
    git clone https://github.com/sankeerthanavenugopal/smallest_ai_assignment.git
-   cd ai-receptionist
+   cd smallest_ai_assignment
    ```
 
 2. **Set up a virtual environment (optional but recommended):**
