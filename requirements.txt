@@ -1,0 +1,7 @@
+Quart
+qdrant-client
+sentence-transformers
+torch
+numpy
+asyncio
+python-dotenv

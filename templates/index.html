@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Receptionist for Dr. Adrin</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #chat-container {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        #user-input {
+            width: 70%;
+            padding: 5px;
+        }
+
+        #send-button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>AI Receptionist for Dr. Adrin</h1>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="Type your message...">
+    <button id="send-button">Send</button>
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        let flowState = null;
+        let emergencyDescription = '';
+        let emergencyTask = null;
+        let estimatedTime = null;
+        let timeOutId = null;
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.innerHTML = `<strong>${role}:</strong> ${content}`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function sendMessage(isAutoRecall = false, autoRecallMessage) {
+            let message = userInput.value.trim();
+            console.log("Made api call")
+
+            // If it's an auto recall, don't use the input value but retain previous state
+            if (isAutoRecall) {
+                message = autoRecallMessage;  // Keep message empty for auto recall
+            }
+
+            // Only add user message to chat if it's not an auto recall and has content
+            if (!isAutoRecall && message) {
+                addMessage('You', message);
+                userInput.value = '';
+            }
+
+            try {
+                const response = await axios.post('/chat', {
+                    message: message,
+                    flowState: flowState,
+                    emergencyDescription: emergencyDescription,
+                    emergencyTask: emergencyTask,
+                    estimatedTime: estimatedTime
+                });
+
+                const {
+                    response: aiResponse,
+                    flowState: newFlowState,
+                    emergencyDescription: newEmergencyDescription,
+                    emergencyTask: newEmergencyTask,
+                    estimatedTime: newEstimatedTime,
+                    recall_delay: recallDelay  // Get the recall delay from the response
+                } = response.data;
+
+                // Add AI response to the chat
+                addMessage('AI', aiResponse);
+
+                // Update the conversation state
+                if (newFlowState) {
+                    flowState = newFlowState;
+                }
+                if (newEmergencyDescription) {
+                    emergencyDescription = newEmergencyDescription;
+                }
+                if (newEmergencyTask) {
+                    emergencyTask = newEmergencyTask;
+                }
+                if (newEstimatedTime) {
+                    estimatedTime = newEstimatedTime;
+                }
+
+                // Handle auto-recall based on flowState and recallDelay
+                if (flowState === 'emergency_eta' && recallDelay !== undefined) {
+
+                    if (timeOutId !== null) {
+
+                        clearTimeout(timeOutId);
+                    }
+
+                    if (message === "too late") {
+                        userInput.disabled = true;
+
+                        // Set a timeout to automatically recall the API after the specified delay
+                        timeOutId = setTimeout(() => sendMessage(true, "too late"), recallDelay * 1000);
+                    }
+                    else {
+                        timeOutId =setTimeout(() => sendMessage(true, ""), recallDelay * 1000);
+                    }
+
+
+
+
+                }
+                if (newFlowState === null) {
+                    userInput.disabled = false;
+                    flowState = newFlowState
+                    addMessage('AI', 'How else can I assist you today?');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('AI', 'Sorry, there was an error processing your request.');
+            }
+        }
+
+        sendButton.addEventListener('click', () => sendMessage(false));
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage(false);
+            }
+        });
+
+        // Initial message
+        addMessage('AI', 'How can I assist you today?'); 
+    </script>
+</body>
+
+</html>
