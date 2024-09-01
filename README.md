@@ -1,4 +1,4 @@
-# AI Receptionist for Dr. Adrin
+# AI Receptionist for a Doctor
 
 This project implements an AI-powered receptionist for Dr. Adrin using a web-based chat interface. The backend is built using Quart, a Python web framework similar to Flask but with support for asynchronous operations. The project leverages the Qdrant vector database and the SentenceTransformers library to understand and respond to user inputs.
 
