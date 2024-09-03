@@ -85,7 +85,8 @@
                     emergencyDescription: newEmergencyDescription,
                     emergencyTask: newEmergencyTask,
                     estimatedTime: newEstimatedTime,
-                    recall_delay: recallDelay  // Get the recall delay from the response
+                    recall_delay: recallDelay,  // Get the recall delay from the response
+                    late: tooLate,
                 } = response.data;
 
                 // Add AI response to the chat
@@ -113,17 +114,15 @@
                         clearTimeout(timeOutId);
                     }
 
-                    if (message === "too late") {
+                    if (tooLate === "too late") {             // send another object from backend to remove the reliability on message for this if else condition 
                         userInput.disabled = true;
 
                         // Set a timeout to automatically recall the API after the specified delay
                         timeOutId = setTimeout(() => sendMessage(true, "too late"), recallDelay * 1000);
                     }
                     else {
-                        timeOutId =setTimeout(() => sendMessage(true, ""), recallDelay * 1000);
+                        timeOutId = setTimeout(() => sendMessage(true, ""), recallDelay * 1000);
                     }
-
-
 
 
                 }
